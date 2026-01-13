@@ -1,0 +1,179 @@
+.settings-wrapper {
+  position: relative;
+}
+
+.settings-drawer {
+  position: fixed;
+  top: 90px; /* Just below your Nav bar */
+  right: 20px;
+  width: 480px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title { display: flex; align-items: center; gap: 10px; }
+.header-title h3 { font-size: 12px; font-weight: 900; letter-spacing: 2px; margin: 0; color: #94a3b8; }
+
+.drawer-content {
+  padding: 25px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.setting-section {
+  margin-bottom: 25px;
+}
+
+.setting-section label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setting-section input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.input-group { display: flex; gap: 10px; }
+.sub-input { flex: 1; }
+.sub-input span { font-size: 8px; font-weight: 900; color: #475569; display: block; margin-bottom: 4px; }
+
+.playlist-edit-list {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  padding: 8px;
+}
+
+.edit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.edit-item:hover { background: rgba(255,255,255,0.03); }
+
+.item-info { display: flex; align-items: center; gap: 10px; }
+.type-tag {
+  font-size: 8px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #1e293b;
+}
+
+.type-tag.excel { color: #22c55e; }
+.type-tag.native { color: #00f2ff; }
+
+.item-title { font-size: 11px; font-weight: 700; color: #cbd5e1; }
+
+.delete-item-btn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.delete-item-btn:hover { opacity: 1; }
+
+.add-form { display: flex; flex-direction: column; gap: 10px; }
+.add-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Update this in your SettingsPanel.css */
+.input-group {
+    display: flex;
+    gap: 20px;            /* Fixes the overlap */
+    width: 100%;
+    margin-top: 10px;
+}
+
+.sub-input {
+    flex: 1;              /* Ensures equal width for Day and Month inputs */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sub-input span {
+    font-size: 10px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sub-input input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    color: white;
+    font-weight: bold;
+}
+
+.drawer-footer {
+  padding: 20px;
+  background: rgba(0,0,0,0.2);
+}
+
+.apply-btn {
+  width: 100%;
+  background: var(--accent-neon);
+  color: #000;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0, 242, 255, 0.2);
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

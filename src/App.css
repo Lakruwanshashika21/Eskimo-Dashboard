@@ -1,38 +1,266 @@
-.App {
-  text-align: center;
+:root {
+  --bg-deep: #020617;
+  --bg-panel: rgba(15, 23, 42, 0.8);
+  --accent-neon: #00f2ff;
+  --blue-light: #38bdf8;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-dim: #64748b;
+  --glass-blur: blur(25px);
+  --danger: #ef4444;
+  --success: #22c55e;
+  --nav-height: 80px;
+  --footer-height: 45px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body, html {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-deep);
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow: hidden; /* CRITICAL: Prevent TV scrollbars */
+  height: 100vh;
+  width: 100vw;
+  color: #fff;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* --- MASTER ORCHESTRATOR --- */
+.app-orchestrator {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at top right, #0f172a, #020617);
+}
+
+/* --- TOP HUD NAVIGATION (GLASSMORPHISM) --- */
+.top-nav-glass {
+  width: 100%;
+  height: var(--nav-height);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 40px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.5s ease;
+}
+
+/* Hide Nav completely in Fullscreen if desired (Optional) */
+/* :fullscreen .top-nav-glass { transform: translateY(-100%); } */
+
+.nav-section-left, .nav-section-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Brand Styling */
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-text {
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: 3px;
+}
+
+.brand-text strong {
+  color: var(--accent-neon);
+  font-weight: 900;
+  text-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+}
+
+/* Pulse Animation for "Live" effect */
+.live-indicator {
+  width: 10px;
+  height: 10px;
+  background: var(--accent-neon);
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 10px var(--accent-neon);
+}
+
+.pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--accent-neon);
+  border-radius: 50%;
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+/* Modern Tab Pills */
+.tab-pills-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-pills-scroll::-webkit-scrollbar { display: none; }
+
+.pill-modern {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pill-modern.active {
+  background: rgba(0, 242, 255, 0.15);
+  border-color: var(--accent-neon);
+  color: var(--accent-neon);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Playback Cluster */
+.playback-cluster {
+  background: rgba(0,0,0,0.3);
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  gap: 5px;
+}
+
+.nav-icon-btn, .fs-toggle {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  opacity: 0.6;
+  transition: 0.2s;
+}
+
+.nav-icon-btn:hover, .fs-toggle:hover { opacity: 1; color: var(--accent-neon); }
+
+.play-toggle {
+  background: var(--accent-neon);
+  color: #000;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.play-toggle.is-paused { background: var(--danger); color: #fff; }
+
+/* --- THE MAIN VIEWPORT (Fixed "Small Square" Site Error) --- */
+.main-viewport {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.iframe-wrapper-force {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.external-frame-full {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* --- MACHINE DASHBOARD NATIVE STYLES --- */
+.machine-container-native {
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* --- EXCEL DASHBOARD SPLIT-PANE --- */
+.excel-view-container.split-mode {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.pane {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 4vw;
 }
 
-.App-link {
-  color: #61dafb;
+.kpi-mini-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2.5vh 3vw;
+  background: var(--bg-panel);
+  border-radius: 20px;
+  margin-bottom: 15px;
+  border: 1px solid var(--glass-border);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.mini-val { 
+  font-size: 4rem; 
+  font-weight: 900; 
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
+
+/* --- INDUSTRIAL FOOTER --- */
+.industrial-footer {
+  width: 100%;
+  height: var(--footer-height);
+  padding: 0 40px;
+  background: #0f172a;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.section-tag {
+  color: var(--accent-neon);
+  background: rgba(0, 242, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 900;
+}
+
+/* Global Transition Utilities */
+.animate-fade { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.divider-v { width: 1px; height: 30px; background: var(--glass-border); }
