@@ -4,21 +4,21 @@ import { AppProvider } from './context/AppContext';
 import ExcelDashboard from './components/ExcelDashboard';
 import MachineDashboard from './components/MachineDashboard';
 import SettingsPanel from './components/SettingsPanel';
-import NewsTicker from './components/NewsTicker'; // Real-time Newsline component
+import NewsTicker from './components/NewsTicker'; 
+import { Menu, X } from 'lucide-react'; 
 import './App.css';
 
 function App() {
   const [isSignedIn] = useIsSignedIn();
   
-  // HUD & Visibility States
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // Defaults to current month YYYY-MM
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); 
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
-  const [delay, setDelay] = useState(10); // Default set to 10s as requested
+  const [delay, setDelay] = useState(10); 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Playlist Configuration (Weather Removed)
   const [playlist, setPlaylist] = useState([
     { id: 'clk', type: 'url', title: 'SYSTEM CLOCK', url: 'https://vclock.com/embed/clock/#theme=0&color=1&show_seconds=1' },
     { id: 'ex0', type: 'excel', title: 'P2P PERFORMANCE', slideIndex: 0 },
@@ -32,11 +32,8 @@ function App() {
     { id: 'mach', type: 'native', title: 'MACHINE LIVE' }, 
   ]);
 
-  // Full-Screen Detection Logic
   useEffect(() => {
-    const handleFsChange = () => {
-      setIsFullScreen(!!document.fullscreenElement);
-    };
+    const handleFsChange = () => setIsFullScreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFsChange);
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
@@ -45,14 +42,12 @@ function App() {
     setActiveIndex((prev) => (prev + dir + playlist.length) % playlist.length);
   }, [playlist.length]);
 
-  // Main Rotation Timer
   useEffect(() => {
     if (isPaused || !isSignedIn) return;
     const timer = setInterval(() => rotate(1), delay * 1000);
     return () => clearInterval(timer);
   }, [rotate, delay, isPaused, isSignedIn]);
 
-  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeys = (e) => {
       if (e.key === "ArrowRight") rotate(1);
@@ -77,14 +72,21 @@ function App() {
   return (
     <AppProvider>
       <div className="app-orchestrator">
-        {/* TOP HUD NAVIGATION */}
         <nav className="top-nav-glass">
-          <div className="nav-section-left">
+          <div className="nav-brand-area">
             <div className="brand-box">
               <div className="live-indicator"><div className="pulse"></div></div>
               <span className="brand-text">ESKIMO <strong>LIVE</strong></span>
             </div>
             <div className="divider-v" />
+          </div>
+
+          <div className="nav-middle-scroll">
+            <button className="mobile-nav-toggle" onClick={() => setIsMenuOpen(true)}>
+              <Menu size={18} />
+              <span>VIEWS</span>
+            </button>
+
             <div className="tab-pills-scroll">
               {playlist.map((tab, idx) => (
                 <button 
@@ -101,7 +103,7 @@ function App() {
           <div className="nav-section-right">
             <div className="playback-cluster">
                <button className="nav-icon-btn" onClick={() => rotate(-1)}>❮</button>
-               <button className={`play-toggle ${isPaused ? 'is-paused' : 'is-playing'}`} onClick={() => setIsPaused(!isPaused)}>
+               <button className={`play-toggle ${isPaused ? 'is-paused' : ''}`} onClick={() => setIsPaused(!isPaused)}>
                  {isPaused ? '▶ PLAY' : '⏸ PAUSE'}
                </button>
                <button className="nav-icon-btn" onClick={() => rotate(1)}>❯</button>
@@ -109,17 +111,12 @@ function App() {
             
             <div className="divider-v" />
             
-            {/* SETTINGS PANEL (Hidden in full-screen for clear TV view) */}
             {!isFullScreen && (
                 <SettingsPanel 
-                    playlist={playlist}
-                    setPlaylist={setPlaylist}
-                    delay={delay} 
-                    setDelay={setDelay} 
-                    selectedMonth={selectedMonth} 
-                    setSelectedMonth={setSelectedMonth} 
-                    selectedDay={selectedDay}
-                    setSelectedDay={setSelectedDay}
+                    playlist={playlist} setPlaylist={setPlaylist}
+                    delay={delay} setDelay={setDelay} 
+                    selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} 
+                    selectedDay={selectedDay} setSelectedDay={setSelectedDay}
                 />
             )}
             
@@ -127,7 +124,35 @@ function App() {
           </div>
         </nav>
 
-        {/* MAIN DISPLAY AREA */}
+        {isMenuOpen && (
+          <div className="mobile-nav-overlay" onClick={() => setIsMenuOpen(false)}>
+            <div className="mobile-nav-drawer" onClick={(e) => e.stopPropagation()}>
+              <div className="drawer-header">
+                <h3>DASHBOARD VIEWS</h3>
+                <button className="close-drawer" onClick={() => setIsMenuOpen(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="mobile-nav-list">
+                {playlist.map((tab, idx) => (
+                  <button 
+                    key={tab.id}
+                    className={`mobile-nav-item ${idx === activeIndex ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveIndex(idx);
+                      setIsMenuOpen(false);
+                      setIsPaused(true);
+                    }}
+                  >
+                    <span className="nav-index">{idx + 1}</span>
+                    <span className="nav-title">{tab.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <main className="main-viewport">
           {currentPage.id === 'mach' ? (
             <MachineDashboard selectedDay={selectedDay} /> 
@@ -136,28 +161,16 @@ function App() {
           ) : (
             <div className="iframe-wrapper-force">
               <iframe 
-                src={currentPage.url} 
-                title={currentPage.title || "External Content"} 
-                className="external-frame-full" 
-                allow="autoplay; fullscreen" 
+                src={currentPage.url} title={currentPage.title} 
+                className="external-frame-full" allow="autoplay; fullscreen" 
               />
             </div>
           )}
         </main>
 
-        {/* INTEGRATED REAL-TIME NEWSLINE (MARKET PULSE) */}
-        <NewsTicker />
-
-        {/* INDUSTRIAL SYSTEM FOOTER */}
-        <footer className="industrial-footer">
-          <div className="footer-status">CLUSTER: <span className="online">OPERATIONAL</span></div>
-          <div className="footer-center">
-               <span className="page-count">VIEW {activeIndex + 1} / {playlist.length}</span>
-               <span className="divider-dot">•</span>
-               <span className="view-title">{currentPage.title}</span>
-          </div>
-          <div className="footer-right">AUTO-CYCLE: {delay}s</div>
-        </footer>
+        <NewsTicker 
+           status={`CLUSTER: OPERATIONAL | VIEW ${activeIndex + 1}/${playlist.length} | ${currentPage.title} | AUTO-CYCLE: ${delay}s`} 
+        />
       </div>
     </AppProvider>
   );

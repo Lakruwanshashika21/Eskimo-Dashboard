@@ -1,66 +1,112 @@
 import React, { useState, useEffect } from 'react';
 import './NewsTicker.css';
 
-const FINANCIAL_FEEDS = [
-  // Your working CBSL Links
-  { name: 'CBSL/WEEKLY', url: 'https://www.cbsl.gov.lk/en/statistics/economic-indicators/weirss' },
-  { name: 'CBSL/MONETARY', url: 'https://www.cbsl.gov.lk/en/press/press-releases/mprrss' },
-  { name: 'CBSL/MONTHLY', url: 'https://www.cbsl.gov.lk/en/statistics/economic-indicators/meirss' },
-  // Stock Market
-  { name: 'CSE/STOCKS', url: 'https://www.cse.lk/corporate-disclosures-feed' }
-];
-
-const GENERAL_FEEDS = [
-  { name: 'BOI/TRADE', url: 'https://investsrilanka.com/category/news/feed/' },
-  { name: 'INDUSTRY', url: 'https://www.just-style.com/feed/' }
+// Combined Local and International News Feeds with Category Labels
+const NEWS_FEEDS = [
+  { name: 'BOI/TRADE', url: 'https://investsrilanka.com/category/news/feed/', category: 'LOCAL' },
+  { name: 'BBC WORLD', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', category: 'GLOBAL' },
+  { name: 'DAILY MIRROR', url: 'https://www.dailymirror.lk/rss/news', category: 'LOCAL' },
+  { name: 'REUTERS GLOBAL', url: 'https://www.reutersagency.com/feed/?best-topics=world&post_type=best', category: 'GLOBAL' },
+  { name: 'ADA DERANA', url: 'http://www.adaderana.lk/rss.php', category: 'LOCAL' },
 ];
 
 const NewsTicker = () => {
   const [news, setNews] = useState([]);
+  const [rates, setRates] = useState(null);
 
   useEffect(() => {
-    const fetchNews = async () => {
+    const fetchData = async () => {
       let items = [];
       
-      // 1. Fetch Working Financial Data
-      for (const source of FINANCIAL_FEEDS) {
+      // 1. Fetch Local & International News
+      for (const source of NEWS_FEEDS) {
         try {
+          // Added &t=${Date.now()} to force a fresh fetch (Cache-Buster)
+          // encodeURIComponent ensures the .php?nid= type URLs are passed correctly
           const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&t=${Date.now()}`);
+          
+          if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+          
           const data = await res.json();
-          if (data.items && data.items.length > 0) {
-            items.push(...data.items.slice(0, 3).map(i => ({ source: source.name, title: i.title })));
+          
+          // Verify status and ensure items exist before mapping
+          if (data.status === 'ok' && data.items) {
+            items.push(...data.items.slice(0, 4).map(i => ({ 
+              source: source.name,
+              category: source.category,
+              title: i.title.toUpperCase() 
+            })));
+          } else {
+            console.warn(`Feed sync failed for ${source.name}: ${data.message || 'Unknown error'}`);
           }
-        } catch (e) { console.error(`Sync Error (${source.name}):`, e); }
+        } catch (e) { 
+          console.error(`Sync Error (${source.name}):`, e); 
+        }
       }
+      
+      // Only update state if items were successfully fetched
+      if (items.length > 0) setNews(items);
 
-      // 2. Fetch General Industry Data
-      for (const source of GENERAL_FEEDS) {
-        try {
-          const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`);
-          const data = await res.json();
-          if (data.items && data.items.length > 0) {
-            items.push(...data.items.slice(0, 2).map(i => ({ source: source.name, title: i.title })));
-          }
-        } catch (e) { console.error(`Sync Error (${source.name}):`, e); }
+      // 2. Fetch Live Exchange Rates (LKR)
+      try {
+        const rateRes = await fetch('https://open.er-api.com/v6/latest/USD');
+        const rateData = await rateRes.json();
+        if (rateData && rateData.rates) {
+          setRates({
+            USD: rateData.rates.LKR.toFixed(2),
+            EUR: (rateData.rates.LKR / rateData.rates.EUR).toFixed(2),
+            GBP: (rateData.rates.LKR / rateData.rates.GBP).toFixed(2)
+          });
+        }
+      } catch (e) { 
+        console.error("Exchange Rate Sync Error", e); 
       }
-      setNews(items);
     };
 
-    fetchNews();
-    const timer = setInterval(fetchNews, 1800000); // 30-min refresh
+    fetchData();
+    const timer = setInterval(fetchData, 1800000); // 30-min refresh
     return () => clearInterval(timer);
   }, []);
 
-  if (news.length === 0) return null;
+  if (news.length === 0 && !rates) return null;
 
   return (
     <div className="newsline-container">
       <div className="newsline-label"><span className="live-dot"></span> MARKET PULSE</div>
+      
       <div className="newsline-scroll">
         <div className="newsline-track">
-          {[...news, ...news].map((n, idx) => (
-            <div key={idx} className="newsline-item">
-              <span className="newsline-source">[{n.source}]</span>
+          {/* SECTION: EXCHANGE RATES (GREEN/RED STYLING) */}
+          {rates && (
+            <div className="rate-group">
+              <span className="rate-item">USD/LKR: <strong className="rate-up">{rates.USD} ▲</strong></span>
+              <span className="rate-item">EUR/LKR: <strong className="rate-down">{rates.EUR} ▼</strong></span>
+              <span className="rate-item">GBP/LKR: <strong className="rate-up">{rates.GBP} ▲</strong></span>
+              <span className="newsline-divider">||</span>
+            </div>
+          )}
+
+          {/* SECTION: NEWS ITEMS (LOCAL + GLOBAL LABELS) */}
+          {news.map((n, idx) => (
+            <div key={`news-${idx}`} className="newsline-item">
+              <span className="newsline-category">[{n.category}]</span>
+              <span className="newsline-source">{n.source}</span>
+              <span className="newsline-title">{n.title}</span>
+              <span className="newsline-divider">|</span>
+            </div>
+          ))}
+
+          {/* DUPLICATE FOR SEAMLESS INFINITE LOOP */}
+          {rates && (
+            <div className="rate-group">
+              <span className="rate-item">USD/LKR: <strong className="rate-up">{rates.USD} ▲</strong></span>
+              <span className="newsline-divider">||</span>
+            </div>
+          )}
+          {news.slice(0, 15).map((n, idx) => (
+            <div key={`dup-${idx}`} className="newsline-item">
+              <span className="newsline-category">[{n.category}]</span>
+              <span className="newsline-source">{n.source}</span>
               <span className="newsline-title">{n.title}</span>
               <span className="newsline-divider">|</span>
             </div>

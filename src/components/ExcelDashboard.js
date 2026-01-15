@@ -29,7 +29,7 @@ const ExcelDashboard = ({ selectedMonth, forcedSlide }) => {
       const folder = month.padStart(2, '0'); 
       const fileName = `Eskimo-Flash Report-${monthName} ${year}.xlsx`;
       
-      const apiEndpoint = `/sites/eskimoknit.sharepoint.com,121c53f7-d617-4ff3-87b3-ffa698e29c90,2e40c08e-a753-4f79-b9d0-769f6e984bb1/drive/root:/${folder}/${encodeURIComponent(fileName)}:/workbook/worksheets('Flash Report')/range(address='A1:R45')`;
+      const apiEndpoint = `/sites/eskimoknit.sharepoint.com,121c53f7-d617-4ff3-87b3-ffa698e29c90,2e40c08e-a753-4f79-b9d0-769f6e984bb1/drive/root:/Daily Report/${folder}/${encodeURIComponent(fileName)}:/workbook/worksheets('Flash Report')/range(address='A1:R45')`;
       
       const res = await graphClient.api(apiEndpoint).get();
       if (res.values) setData(res.values);

@@ -1,69 +1,86 @@
 .newsline-container {
     position: fixed;
-    bottom: 45px; /* Sits perfectly above your industrial-footer */
+    bottom: 0; /* Forced to absolute bottom */
     left: 0;
     width: 100%;
-    height: 35px;
-    background: rgba(2, 6, 23, 0.98);
-    backdrop-filter: blur(15px);
+    height: 42px; /* Large beautiful bar */
+    background: #020617;
     border-top: 1px solid rgba(0, 242, 255, 0.3);
     display: flex;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000;
     overflow: hidden;
 }
 
 .newsline-label {
     background: #00f2ff;
     color: #020617;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 950;
     padding: 0 20px;
     height: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    letter-spacing: 1px;
-    z-index: 1001;
     box-shadow: 15px 0 25px rgba(0, 0, 0, 0.7);
+    z-index: 10;
     white-space: nowrap;
 }
 
-.newsline-scroll {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-}
-
+/* --- NewsTicker.css --- */
 .newsline-track {
     display: flex;
+    align-items: center;
     white-space: nowrap;
-    animation: scroll-news 90s linear infinite; /* Adjust speed here */
+    /* Decrease this value (e.g., from 85s to 40s) to scroll FASTER */
+    animation: scroll-news 200s linear infinite; 
+}
+/* EXCHANGE RATE STYLING */
+.rate-group {
+    display: flex;
+    gap: 30px;
+    padding-left: 40px;
 }
 
+.rate-item {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.rate-up { color: #22c55e; } /* Green for Up */
+.rate-down { color: #ef4444; } /* Red for Down */
+
+/* NEWS ITEM STYLING */
 .newsline-item {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 15px;
-    padding-left: 60px;
-    white-space: nowrap;
+    padding: 0 30px;
 }
 
 .newsline-source {
     color: #00f2ff;
-    font-size: 11px;
     font-weight: 900;
+    font-size: 11px;
 }
 
 .newsline-title {
     color: #cbd5e1;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.newsline-divider {
+    color: rgba(255, 255, 255, 0.2);
+    margin: 0 15px;
 }
 
 @keyframes scroll-news {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
+}
+
+/* Hide on mobile for chart space */
+@media (max-width: 768px) {
+    .newsline-container { display: none !important; }
 }
