@@ -67,7 +67,7 @@ const SettingsPanel = ({
                 <div className="sub-input">
                     <span>PRODUCTION DAY</span>
                     <input type="date" value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} />
-                </div><br />
+                </div> 
                 <div className="sub-input">
                     <span>FINANCIAL MONTH</span>
                     {/* Fixed Month Selector */}

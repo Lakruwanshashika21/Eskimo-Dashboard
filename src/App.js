@@ -21,13 +21,12 @@ function App() {
 
   const [playlist, setPlaylist] = useState([
     { id: 'clk', type: 'url', title: 'SYSTEM CLOCK', url: 'https://vclock.com/embed/clock/#theme=0&color=1&show_seconds=1' },
+    { id: 'pbi-perf', type: 'url', title: 'POWER BI LIVE' },
     { id: 'ex0', type: 'excel', title: 'P2P PERFORMANCE', slideIndex: 0 },
     { id: 'ex1', type: 'excel', title: 'MONTHLY P2P', slideIndex: 1 },
     { id: 'ex2', type: 'excel', title: 'HEADCOUNT', slideIndex: 2 },
     { id: 'ex3', type: 'excel', title: 'QUALITY REJECTION', slideIndex: 3 },
     { id: 'ex4', type: 'excel', title: 'INSPECTION PASS', slideIndex: 4 },
-    { id: 'ex5', type: 'excel', title: 'FOB SUMMARY', slideIndex: 5 },
-    { id: 'ex6', type: 'excel', title: 'FOB GRAPH', slideIndex: 6 },
     { id: 'ex7', type: 'excel', title: 'PRODUCTION SUMMARY', slideIndex: 7 },
     { id: 'mach', type: 'native', title: 'MACHINE LIVE' }, 
   ]);
@@ -154,17 +153,39 @@ function App() {
         )}
 
         <main className="main-viewport">
+          {/* PERSISTENT POWER BI IFRAME */}
+          <div 
+            className="iframe-wrapper-force" 
+            style={{ display: currentPage.id === 'pbi-perf' ? 'flex' : 'none' }}
+          >
+            <iframe 
+              src="https://app.powerbi.com/reportEmbed?reportId=397b3261-7326-4641-b518-a49b5523400b&autoAuth=true&navContentPaneEnabled=false&filterPaneEnabled=false" 
+              title="Power BI Permanent"
+              className="external-frame-full" 
+              allow="autoplay; fullscreen" 
+            />
+          </div>
+
+          {/* DYNAMIC CONTENT */}
           {currentPage.id === 'mach' ? (
             <MachineDashboard selectedDay={selectedDay} /> 
           ) : currentPage.type === 'excel' ? (
-            <ExcelDashboard selectedMonth={selectedMonth} forcedSlide={currentPage.slideIndex} />
+            <ExcelDashboard 
+              selectedMonth={selectedMonth} 
+              selectedDay={selectedDay} 
+              forcedSlide={currentPage.slideIndex} 
+            />
           ) : (
-            <div className="iframe-wrapper-force">
-              <iframe 
-                src={currentPage.url} title={currentPage.title} 
-                className="external-frame-full" allow="autoplay; fullscreen" 
-              />
-            </div>
+            currentPage.id !== 'pbi-perf' && (
+              <div className="iframe-wrapper-force">
+                <iframe 
+                  src={currentPage.url} 
+                  title={currentPage.title} 
+                  className="external-frame-full" 
+                  allow="autoplay; fullscreen" 
+                />
+              </div>
+            )
           )}
         </main>
 

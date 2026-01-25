@@ -3,12 +3,24 @@ import { Providers } from '@microsoft/mgt-element';
 import './ExcelDashboard.css';
 
 // --- ROBUST FORMATTING HELPERS ---
+// --- UPDATED ROBUST FORMATTING HELPERS ---
 const formatPct = (val) => {
   if (val === undefined || val === null || val === "" || val === "#DIV/0!") return "0%";
+  
+  // Clean the string of commas and percent signs
   let str = val.toString(); 
   const num = parseFloat(str.replace(/,/g, '').replace(/%/g, ''));
+  
   if (isNaN(num)) return "0%";
-  return num <= 1 && num > 0 ? `${(num * 100).toFixed(1)}%` : `${num.toFixed(1)}%`;
+
+  /* FIX: We now check if the number is a very small decimal (like 0.85) 
+     or a whole number percentage (like 113).
+     If it's a decimal < 2.0 (allowing for up to 200%), we multiply by 100.
+     Otherwise, we treat it as a whole number.
+  */
+  const result = (num <= 2.0 && num > 0) ? (num * 100) : num;
+  
+  return `${result.toFixed(0)}%`; // Shows 113% instead of 113.0%
 };
 
 const formatNum = (val) => {
@@ -16,6 +28,18 @@ const formatNum = (val) => {
   let str = val.toString().replace(/,/g, '').replace(/\((.*)\)/, '-$1').trim();
   const num = parseFloat(str);
   return isNaN(num) ? "0" : num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+};
+
+// Fixed helper to convert Excel Serial Numbers to readable dates
+const formatExcelDate = (serial) => {
+  if (!serial || isNaN(serial)) return serial;
+  // Excel base date is Dec 30, 1899
+  const date = new Date((serial - 25569) * 86400 * 1000);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit'
+  }).replace(/ /g, '-');
 };
 
 const ExcelDashboard = ({ selectedMonth, forcedSlide }) => {
@@ -44,10 +68,18 @@ const ExcelDashboard = ({ selectedMonth, forcedSlide }) => {
 
   if (!data) return <div className="loading-screen-inner">SYNCING COMMAND DATA...</div>;
 
+  // Corrected: Row 3, Column D in range A1:R45 is data[2][3]
+  const sheetDate = data[2] && data[2][3] ? formatExcelDate(data[2][3]) : "";
+
   return (
     <div className="excel-view-container split-mode">
       <div className="pane left-pane">
-        <h2 className="pane-label">FACTORY EFFICIENCY %</h2>
+        {/* NEW WRAPPER: Handles top-left date while keeping title centered */}
+        <div className="pane-header-container">
+          <div className="sheet-date-display-top">{sheetDate}</div>
+          <h2 className="pane-label">FACTORY EFFICIENCY %</h2>
+        </div>
+
         <div className="kpi-vertical-stack">
           <KPIMini title="NEGOMBO" value={data[7][3]} isPercent color="#00f2ff" />
           <KPIMini title="PALLEKELE" value={data[8][3]} isPercent color="#00f2ff" />
@@ -91,7 +123,7 @@ const BarMini = ({ label, plan, actual }) => {
   );
 };
 
-// --- TABLE COMPONENTS (Production Stats) ---
+// (Existing Table Components TableSAH, TableMonthlyP2P, etc. remain unchanged)
 const TableSAH = ({ data }) => (
   <div className="sub-slide animate-fade">
     <h2 className="pane-label">P2P PRODUCTION (SAH)</h2>
