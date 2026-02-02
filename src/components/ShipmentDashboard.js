@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Providers } from '@microsoft/mgt-element';
 
-const ShipmentDashboard = ({ viewType }) => {
+const ShipmentDashboard = ({ viewType, selectedDay }) => {
   const [data, setData] = useState([]);
 
   const fetchShipments = useCallback(async () => {
     try {
       const graphClient = Providers.globalProvider.graph.client;
-      // Using the GUID-based Site ID from your working system
       const siteId = "eskimoknit.sharepoint.com,121c53f7-d617-4ff3-87b3-ffa698e29c90,2e40c08e-a753-4f79-b9d0-769f6e984bb1";
-      
-      // Range C3:P100 captures Date through Packed Qty
-      const endpoint = `/sites/${siteId}/drive/root:/Shipping/Shippment.xlsx:/workbook/worksheets('Sheet1')/range(address='C3:P100')`;
+      // Range C3:P500 captures Date(C) through Packed Qty(O) and Short(P)
+      const endpoint = `/sites/${siteId}/drive/root:/Shipping/Shippment.xlsx:/workbook/worksheets('Sheet1')/range(address='C3:P500')`;
       
       const res = await graphClient.api(endpoint).get();
       if (res.values) setData(res.values);
     } catch (e) { 
-      console.error("Critical Shipment Sync Error:", e); 
+      console.error("Shipment Data Sync Error:", e); 
     }
   }, []);
 
@@ -24,38 +22,43 @@ const ShipmentDashboard = ({ viewType }) => {
 
   const processedShipments = useMemo(() => {
     if (!data || data.length < 2) return [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    
+    const refDay = selectedDay ? new Date(selectedDay) : new Date();
+    refDay.setHours(0, 0, 0, 0);
 
-    const parseDate = (val) => {
-      if (!val) return null;
-      const d = !isNaN(val) ? new Date((val - 25569) * 86400 * 1000) : new Date(val);
+    const parseFlexibleDate = (val) => {
+      if (!val || val === "" || val === "NaN") return null;
+      // Support for Excel Serial Numbers and Text-based dates like "5-Feb-26"
+      const d = !isNaN(val) && typeof val === 'number' 
+        ? new Date((parseFloat(val) - 25569) * 86400 * 1000) 
+        : new Date(val);
       return isNaN(d.getTime()) ? null : d;
     };
 
     return data.slice(1).map(row => {
-      const originalDate = parseDate(row[0]);
-      const ext1 = parseDate(row[9]);  // Column L (Extended Date 1)
-      const ext2 = parseDate(row[10]); // Column M (Extended Date 2)
-      const ext3 = parseDate(row[11]); // Column N (Extended Date 3)
+      const originalDate = parseFlexibleDate(row[0]); // Column C
+      const ext1 = parseFlexibleDate(row[9]);        // Column L
+      const ext2 = parseFlexibleDate(row[10]);       // Column M
+      const ext3 = parseFlexibleDate(row[11]);       // Column N
       
-      // Prioritize Extended Dates over the Original Date
+      // Use the latest extension available, otherwise original
       const activeDate = ext3 || ext2 || ext1 || originalDate;
       if (!activeDate) return null;
 
-      const qty = parseFloat(row[3]) || 0; // Column F (Qty)
-      const packedQty = parseFloat(row[12]) || 0; // Column O (Packed Qty)
-      const isComplete = qty === packedQty && qty > 0;
-      const shortValue = qty - packedQty;
+      const qty = parseFloat(row[3]?.toString().replace(/,/g, '')) || 0;       // Column F
+      const packedQty = parseFloat(row[12]?.toString().replace(/,/g, '')) || 0; // Column O
+      const isComplete = qty > 0 && packedQty >= qty;
+      const shortAmount = Math.max(0, qty - packedQty);
 
       return {
         originalDate,
         activeDate,
-        orderNo: row[7], // Column J (Order No)
-        customer: row[2], // Column E (Customer)
+        eskArticle: row[6], // Column I: ESK.ARTICLE
+        orderNo: row[7],    // Column J: ORDER NO
+        customer: row[2],   // Column E: Customer
         qty,
-        status: isComplete ? "Complete" : `Short: ${shortValue.toLocaleString()}`,
-        isComplete
+        isComplete,
+        status: isComplete ? "Complete" : `Short: ${shortAmount.toLocaleString()}`
       };
     }).filter(item => {
       if (!item) return false;
@@ -63,14 +66,14 @@ const ShipmentDashboard = ({ viewType }) => {
       d.setHours(0,0,0,0);
       
       if (viewType === 'today') {
-        return d.getTime() === today.getTime();
+        return d.getTime() === refDay.getTime();
       } else {
-        const endRange = new Date(today);
-        endRange.setDate(today.getDate() + 7);
-        return d >= today && d <= endRange;
+        const endRange = new Date(refDay);
+        endRange.setDate(refDay.getDate() + 7);
+        return d >= refDay && d <= endRange;
       }
     }).sort((a, b) => a.activeDate - b.activeDate);
-  }, [data, viewType]);
+  }, [data, viewType, selectedDay]);
 
   return (
     <div className="shipment-view-wrapper animate-fade">
@@ -78,15 +81,16 @@ const ShipmentDashboard = ({ viewType }) => {
         <h2 className="pane-label">
           {viewType === 'today' ? "DAILY SHIPMENT TRACKER" : "7-DAY SHIPMENT FORECAST"}
         </h2>
-        {/* Automatic Scroll if more than 8 rows */}
-        <div className={`shipment-scroll-box ${processedShipments.length > 8 ? 'marquee-vertical' : ''}`}>
-          <table className="split-table">
+        {/* The scroll box now contains a table with a frozen header */}
+        <div className="shipment-scroll-box">
+          <table className={`split-table ${processedShipments.length > 8 ? 'marquee-vertical' : ''}`}>
             <thead>
               <tr>
                 {viewType === 'weekly' && <th>ORIGINAL</th>}
                 <th>DELIVERY</th>
                 <th>ORDER NUMBER</th>
                 <th>CUSTOMER</th>
+                <th>ARTICLE</th>
                 <th>QTY</th>
                 <th>STATUS</th>
               </tr>
@@ -100,6 +104,7 @@ const ShipmentDashboard = ({ viewType }) => {
                   <td className="tabular">{item.activeDate.toLocaleDateString('en-GB')}</td>
                   <td className="tabular text-blue">{item.orderNo}</td>
                   <td>{item.customer}</td>
+                  <td className="tabular">{item.eskArticle}</td>
                   <td className="tabular">{item.qty.toLocaleString()}</td>
                   <td>
                     <span className={`status-pill ${item.isComplete ? 'status-complete' : 'status-pending'}`}>
@@ -108,7 +113,11 @@ const ShipmentDashboard = ({ viewType }) => {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan="6" className="empty-msg">NO SHIPMENTS SCHEDULED</td></tr>
+                <tr>
+                  <td colSpan={viewType === 'weekly' ? "7" : "6"} className="empty-msg">
+                    NO SHIPMENTS SCHEDULED
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
