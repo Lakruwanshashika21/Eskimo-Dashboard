@@ -3,32 +3,47 @@ import { Login, useIsSignedIn } from '@microsoft/mgt-react';
 import { AppProvider } from './context/AppContext'; 
 import ExcelDashboard from './components/ExcelDashboard';
 import MachineDashboard from './components/MachineDashboard';
+import ShipmentDashboard from './components/ShipmentDashboard'; // Added Import
 import SettingsPanel from './components/SettingsPanel';
 import NewsTicker from './components/NewsTicker'; 
 import { Menu, X } from 'lucide-react'; 
 import './App.css';
+
+// --- NEW HELPER LOGIC: CALCULATE YESTERDAY ---
+const getYesterday = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d;
+};
+
+const yesterday = getYesterday();
+const defaultMonth = yesterday.toISOString().slice(0, 7); 
+const defaultDay = yesterday.toISOString().split('T')[0];
 
 function App() {
   const [isSignedIn] = useIsSignedIn();
   
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); 
-  const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
+  
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth); 
+  const [selectedDay, setSelectedDay] = useState(defaultDay);
+  
   const [delay, setDelay] = useState(10); 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const [playlist, setPlaylist] = useState([
     { id: 'clk', type: 'url', title: 'SYSTEM CLOCK', url: 'https://vclock.com/embed/clock/#theme=0&color=1&show_seconds=1' },
+    { id: 'pbi-perf', type: 'url', title: 'POWER BI LIVE' },
     { id: 'ex0', type: 'excel', title: 'P2P PERFORMANCE', slideIndex: 0 },
     { id: 'ex1', type: 'excel', title: 'MONTHLY P2P', slideIndex: 1 },
     { id: 'ex2', type: 'excel', title: 'HEADCOUNT', slideIndex: 2 },
     { id: 'ex3', type: 'excel', title: 'QUALITY REJECTION', slideIndex: 3 },
     { id: 'ex4', type: 'excel', title: 'INSPECTION PASS', slideIndex: 4 },
-    { id: 'ex5', type: 'excel', title: 'FOB SUMMARY', slideIndex: 5 },
-    { id: 'ex6', type: 'excel', title: 'FOB GRAPH', slideIndex: 6 },
     { id: 'ex7', type: 'excel', title: 'PRODUCTION SUMMARY', slideIndex: 7 },
+    { id: 'ship-day', type: 'shipment', title: 'DAILY SHIPMENTS', view: 'today' }, // New Slide
+    { id: 'ship-week', type: 'shipment', title: 'WEEKLY SHIPMENTS', view: 'weekly' }, // New Slide
     { id: 'mach', type: 'native', title: 'MACHINE LIVE' }, 
   ]);
 
@@ -154,17 +169,43 @@ function App() {
         )}
 
         <main className="main-viewport">
+          <div 
+            className="iframe-wrapper-force" 
+            style={{ display: currentPage.id === 'pbi-perf' ? 'flex' : 'none' }}
+          >
+            <iframe 
+              src="https://app.powerbi.com/reportEmbed?reportId=65384404-85a3-4086-baab-55877cefdc68&autoAuth=true&ctid=d4dc6f8a-780d-4900-b321-58080d6bdf79" 
+              title="Power BI Permanent"
+              className="external-frame-full" 
+              allow="autoplay; fullscreen" 
+            />
+          </div>
+
+          {/* RENDERING LOGIC */}
           {currentPage.id === 'mach' ? (
             <MachineDashboard selectedDay={selectedDay} /> 
+          ) : currentPage.type === 'shipment' ? (
+            <ShipmentDashboard 
+              selectedDay={selectedDay} 
+              viewType={currentPage.view} 
+            />
           ) : currentPage.type === 'excel' ? (
-            <ExcelDashboard selectedMonth={selectedMonth} forcedSlide={currentPage.slideIndex} />
+            <ExcelDashboard 
+              selectedMonth={selectedMonth} 
+              selectedDay={selectedDay} 
+              forcedSlide={currentPage.slideIndex} 
+            />
           ) : (
-            <div className="iframe-wrapper-force">
-              <iframe 
-                src={currentPage.url} title={currentPage.title} 
-                className="external-frame-full" allow="autoplay; fullscreen" 
-              />
-            </div>
+            currentPage.id !== 'pbi-perf' && (
+              <div className="iframe-wrapper-force">
+                <iframe 
+                  src={currentPage.url} 
+                  title={currentPage.title} 
+                  className="external-frame-full" 
+                  allow="autoplay; fullscreen" 
+                />
+              </div>
+            )
           )}
         </main>
 
