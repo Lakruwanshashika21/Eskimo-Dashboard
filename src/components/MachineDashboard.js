@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { ChevronDown, ChevronRight, Wrench } from 'lucide-react'; // Added Wrench
+import { ChevronDown, ChevronRight} from 'lucide-react'; // Added Wrench
 import './MachineDashboard.css';
 
 // Added MAINTAIN color

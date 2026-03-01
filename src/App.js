@@ -3,7 +3,8 @@ import { Login, useIsSignedIn } from '@microsoft/mgt-react';
 import { AppProvider } from './context/AppContext'; 
 import ExcelDashboard from './components/ExcelDashboard';
 import MachineDashboard from './components/MachineDashboard';
-import ShipmentDashboard from './components/ShipmentDashboard'; // Added Import
+import ShipmentDashboard from './components/ShipmentDashboard';
+import PackingDashboard from './components/PackingDashboard'; // ADDED IMPORT
 import SettingsPanel from './components/SettingsPanel';
 import NewsTicker from './components/NewsTicker'; 
 import { Menu, X } from 'lucide-react'; 
@@ -42,8 +43,10 @@ function App() {
     { id: 'ex3', type: 'excel', title: 'QUALITY REJECTION', slideIndex: 3 },
     { id: 'ex4', type: 'excel', title: 'INSPECTION PASS', slideIndex: 4 },
     { id: 'ex7', type: 'excel', title: 'PRODUCTION SUMMARY', slideIndex: 7 },
-    { id: 'ship-day', type: 'shipment', title: 'DAILY SHIPMENTS', view: 'today' }, // New Slide
-    { id: 'ship-week', type: 'shipment', title: 'WEEKLY SHIPMENTS', view: 'weekly' }, // New Slide
+   // { id: 'pack-plan', type: 'packing', title: 'DAILY PACKING PLAN', view: 'plan' },
+   // { id: 'pack-actual', type: 'packing', title: 'DAILY PACKING ACTUAL', view: 'actual' },
+    { id: 'ship-day', type: 'shipment', title: 'DAILY SHIPMENTS', view: 'today' },
+    { id: 'ship-week', type: 'shipment', title: 'WEEKLY SHIPMENTS', view: 'weekly' },
     { id: 'mach', type: 'native', title: 'MACHINE LIVE' }, 
   ]);
 
@@ -181,12 +184,15 @@ function App() {
             />
           </div>
 
-          {/* RENDERING LOGIC */}
+          {/* RENDERING LOGIC FIXED */}
           {currentPage.id === 'mach' ? (
-            <MachineDashboard selectedDay={selectedDay} /> 
-          ) : currentPage.type === 'shipment' ? (
+          <MachineDashboard 
+           
+            selectedDay={selectedDay === defaultDay ? null : selectedDay} 
+          /> 
+        ) : currentPage.type === 'shipment' ? (
             <ShipmentDashboard 
-              selectedDay={selectedDay} 
+              selectedDay={selectedDay === defaultDay ? null : selectedDay} 
               viewType={currentPage.view} 
             />
           ) : currentPage.type === 'excel' ? (
@@ -194,6 +200,11 @@ function App() {
               selectedMonth={selectedMonth} 
               selectedDay={selectedDay} 
               forcedSlide={currentPage.slideIndex} 
+            />
+          ) : currentPage.type === 'packing' ? (
+            <PackingDashboard 
+              selectedDay={selectedDay} 
+              view={currentPage.view} // This passes 'plan' or 'actual'
             />
           ) : (
             currentPage.id !== 'pbi-perf' && (
