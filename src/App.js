@@ -30,19 +30,19 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth); 
   const [selectedDay, setSelectedDay] = useState(defaultDay);
   
-  const [delay, setDelay] = useState(10); 
+  const [delay, setDelay] = useState(30); 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   const [playlist, setPlaylist] = useState([
     { id: 'clk', type: 'url', title: 'SYSTEM CLOCK', url: 'https://vclock.com/embed/clock/#theme=0&color=1&show_seconds=1' },
     { id: 'pbi-perf', type: 'url', title: 'POWER BI LIVE' },
-    { id: 'ex0', type: 'excel', title: 'P2P PERFORMANCE', slideIndex: 0 },
-    { id: 'ex1', type: 'excel', title: 'MONTHLY P2P', slideIndex: 1 },
+    //{ id: 'ex0', type: 'excel', title: 'P2P PERFORMANCE', slideIndex: 0 },
+    //{ id: 'ex1', type: 'excel', title: 'MONTHLY P2P', slideIndex: 1 },
     { id: 'ex2', type: 'excel', title: 'HEADCOUNT', slideIndex: 2 },
-    { id: 'ex3', type: 'excel', title: 'QUALITY REJECTION', slideIndex: 3 },
-    { id: 'ex4', type: 'excel', title: 'INSPECTION PASS', slideIndex: 4 },
-    { id: 'ex7', type: 'excel', title: 'PRODUCTION SUMMARY', slideIndex: 7 },
+    //{ id: 'ex3', type: 'excel', title: 'QUALITY REJECTION', slideIndex: 3 },
+   // { id: 'ex4', type: 'excel', title: 'INSPECTION PASS', slideIndex: 4 },
+    //{ id: 'ex7', type: 'excel', title: 'PRODUCTION SUMMARY', slideIndex: 7 },
    // { id: 'pack-plan', type: 'packing', title: 'DAILY PACKING PLAN', view: 'plan' },
    // { id: 'pack-actual', type: 'packing', title: 'DAILY PACKING ACTUAL', view: 'actual' },
     { id: 'ship-day', type: 'shipment', title: 'DAILY SHIPMENTS', view: 'today' },
